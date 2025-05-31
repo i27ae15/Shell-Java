@@ -10,10 +10,7 @@ public class Main {
             System.out.print("$ ");
             String input = scanner.nextLine();
 
-            if (input.equals("exit")) {
-                exit();
-                break;
-            }
+            if (input.equals("exit 0")) break;
 
             System.out.println(input + ": command not found");
         }
