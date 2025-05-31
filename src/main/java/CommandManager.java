@@ -10,18 +10,23 @@ public class CommandManager {
 
     public CommandManager() {
         commands.put(CommandConstants.ECHO, this::echo);
-        commands.put(CommandConstants.EXIT_0, this::exit);
     }
 
     public boolean runCommand(Scanner scan, String input) {
 
         this.scanner = scan;
+        if (input.equals(CommandConstants.EXIT_0)) exit();
 
-        String commandName = input.toLowerCase();
-        Command action = commands.get(commandName.toLowerCase());
+        String[] tokens = input.trim().split("\\s+");
+        String commandName = tokens[0].toLowerCase();
+
+        String[] args = new String[tokens.length - 1];
+        System.arraycopy(tokens, 1, args, 0, args.length);
+
+        Command action = commands.get(commandName);
 
         if (action != null) {
-            action.execute(commandName);
+            action.execute(args);
             return true;
         }
 
@@ -29,12 +34,11 @@ public class CommandManager {
         return false;
     }
 
-    public void echo(String command) {
-        System.out.println(command);
+    public void echo(String[] args) {
+        System.out.println(String.join(" ", args));
     }
 
-    public void exit(String command) {
-        System.out.println(CommandConstants.EXIT_0);
+    public void exit() {
         scanner.close();
         System.exit(0);
     }
