@@ -10,12 +10,13 @@ public class CommandManager {
 
     public CommandManager() {
         commands.put(CommandConstants.ECHO, this::echo);
+        commands.put(CommandConstants.TYPE, this::type);
+        commands.put(CommandConstants.EXIT, this::exit);
     }
 
     public boolean runCommand(Scanner scan, String input) {
 
         this.scanner = scan;
-        if (input.equals(CommandConstants.EXIT_0)) exit();
 
         String[] tokens = input.trim().split("\\s+");
         String commandName = tokens[0].toLowerCase();
@@ -38,9 +39,21 @@ public class CommandManager {
         System.out.println(String.join(" ", args));
     }
 
-    public void exit() {
+    public void type(String[] args) {
+        String commandName = args[0];
+
+        if (CommandConstants.ALL_COMMANDS.contains(commandName)) {
+            System.out.println(commandName + " is a shell builtin");
+            return;
+        }
+
+        System.out.println(commandName + ": not found");
+
+    }
+
+    public void exit(String[] args) {
         scanner.close();
-        System.exit(0);
+        System.exit(Integer.parseInt(args[0]));
     }
 
 
