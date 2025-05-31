@@ -6,13 +6,23 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            System.out.print("$ ");
 
+            System.out.print("$ ");
             String input = scanner.nextLine();
+
+            if (input.equals(input)) {
+                exit();
+                break;
+            }
 
             System.out.println(input + ": command not found");
         }
 
+        scanner.close();
 
+    }
+
+    public static void exit() {
+        System.out.println("exit 0");
     }
 }
