@@ -2,6 +2,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -39,15 +40,45 @@ public class CommandManager {
             return true;
         }
 
+        // Check on environment variables
+        String executableFile = this.findFileOnPath(commandName);
+        if (executableFile != null) {
+            runExternalProgram(commandName, args);
+            return true;
+        }
+
         System.out.println(commandName + ": command not found");
         return false;
     }
 
-    public void echo(String[] args) {
+    private void runExternalProgram(String filePath, String[] args) {
+
+        try {
+            List<String> fullCommand = new ArrayList<>();
+            fullCommand.add(filePath);
+            Collections.addAll(fullCommand, args);
+
+            ProcessBuilder pb = new ProcessBuilder(fullCommand);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            try(Scanner output = new Scanner(process.getInputStream())) {
+                while (output.hasNextLine()) {
+                    System.out.println(output.nextLine());
+                }
+            }
+
+            process.waitFor();
+        } catch (Exception e) {
+            System.out.println("Failed to run program: " + e.getMessage());
+        }
+    }
+
+    private void echo(String[] args) {
         System.out.println(String.join(" ", args));
     }
 
-    public void type(String[] args) {
+    private void type(String[] args) {
         String commandName = args[0];
 
         // Look on the path first:
@@ -56,20 +87,17 @@ public class CommandManager {
             return;
         }
 
-        // Check each dir in PATH for executable
-        for (String dir : paths) {
-            File file = new File(dir, commandName);
-            if (file.exists() && file.canExecute()) {
-                System.out.println(commandName + " is " + file.getAbsolutePath());
-                return;
-            }
+        String executableFile = this.findFileOnPath(commandName);
+        if (executableFile != null) {
+            System.out.println(commandName + " is " + executableFile);
+            return;
         }
 
         System.out.println(commandName + ": not found");
 
     }
 
-    public void exit(String[] args) {
+    private void exit(String[] args) {
         scanner.close();
         System.exit(Integer.parseInt(args[0]));
     }
@@ -78,12 +106,16 @@ public class CommandManager {
     // ----------------------------------------------------------
     // Utils
 
-    public boolean findFolderInPath(String toFind) {
-        for (String path : this.paths) {
-            if (path.contains(toFind)) return true;
-        }
+    private String findFileOnPath(String fileName) {
+        // Check each dir in PATH for executable
 
-        return false;
+        for (String dir : paths) {
+            File file = new File(dir, fileName);
+            if (file.exists() && file.canExecute()) {
+                return file.getAbsolutePath();
+            }
+        }
+        return null;
     }
 
 
