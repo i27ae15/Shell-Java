@@ -18,6 +18,7 @@ public class CommandManager {
         commands.put(CommandConstants.ECHO, this::echo);
         commands.put(CommandConstants.TYPE, this::type);
         commands.put(CommandConstants.EXIT, this::exit);
+        commands.put(CommandConstants.PWD, this::pwd);
 
         this.strPath = System.getenv("PATH");
         Collections.addAll(this.paths, strPath.split(":"));
@@ -76,6 +77,11 @@ public class CommandManager {
 
     private void echo(String[] args) {
         System.out.println(String.join(" ", args));
+    }
+
+    private void pwd(String[] args) {
+        String cwd = System.getProperty("user.dir");
+        System.out.println(cwd);
     }
 
     private void type(String[] args) {
