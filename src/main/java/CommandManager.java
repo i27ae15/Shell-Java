@@ -1,5 +1,6 @@
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -13,8 +14,7 @@ public class CommandManager {
     private Scanner scanner;
     private final String strPath;
     private final ArrayList<String> paths = new ArrayList<>();
-
-    private String cwd = System.getProperty("user.dir");
+    private String cwd;
 
     public CommandManager() {
         commands.put(CommandConstants.ECHO, this::echo);
@@ -24,6 +24,7 @@ public class CommandManager {
         commands.put(CommandConstants.CD, this::cd);
 
         this.strPath = System.getenv("PATH");
+        setCurrentDir(System.getProperty("user.dir"));
         Collections.addAll(this.paths, strPath.split(":"));
     }
 
@@ -86,15 +87,68 @@ public class CommandManager {
         System.out.println(cwd);
     }
 
+    private boolean goingBack(String path) {
+        int count = 0;
+        int index = 0;
+
+        while ((index = path.indexOf("..", index)) != -1) {
+            count++;
+            index += 2;
+        }
+
+        if (count > 0) {
+
+            // User wants to go back
+            // Delete the N last folders
+            String[] elements = cwd.split("/");
+
+            int toAdd = elements.length - count;
+
+            if (0 >= toAdd) {
+                System.out.println("cd: " + path + ": No such file or directory");
+                return false;
+            }
+
+            cwd = "";
+            for (int i = 0; toAdd > i; i++) {
+
+                if (toAdd - i == 1) {
+                    cwd += elements[i];
+                }
+                else {
+                    cwd += elements[i] + "/";
+                }
+
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     private void cd(String[] args) {
 
-        // Check that the path exists
         String path = args[0];
 
+        // Check if the user wants to go back
+
+        if (goingBack(path)) return;
+
+
+        if (path.startsWith("./")) {
+            // delete the .
+            path = path.substring(1, path.length());
+
+            // Add the cwd at front
+            path = cwd + path;
+        }
+
+        // Check for absolute path
         File dir = new File(path);
 
         if (dir.exists() && dir.isDirectory()) {
-            cwd = args[0];
+            setCurrentDir(path);
             return;
         }
 
@@ -141,5 +195,12 @@ public class CommandManager {
         return null;
     }
 
+    private void setCurrentDir(String absolutePath) {
+        if (absolutePath.endsWith("/")) {
+            absolutePath = absolutePath.substring(0, absolutePath.length() - 1);
+        }
+
+        cwd = absolutePath;
+    }
 
 }
