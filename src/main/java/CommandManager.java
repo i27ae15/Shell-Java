@@ -1,6 +1,5 @@
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +23,9 @@ public class CommandManager {
         commands.put(CommandConstants.CD, this::cd);
 
         this.strPath = System.getenv("PATH");
+
         setCurrentDir(System.getProperty("user.dir"));
+
         Collections.addAll(this.paths, strPath.split(":"));
     }
 
@@ -134,6 +135,10 @@ public class CommandManager {
         // Check if the user wants to go back
 
         if (goingBack(path)) return;
+        if (path.startsWith("~")) {
+            setCurrentDir(System.getenv("HOME"));
+            return;
+        }
 
 
         if (path.startsWith("./")) {
