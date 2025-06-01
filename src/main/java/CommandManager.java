@@ -14,11 +14,14 @@ public class CommandManager {
     private final String strPath;
     private final ArrayList<String> paths = new ArrayList<>();
 
+    private String cwd = System.getProperty("user.dir");
+
     public CommandManager() {
         commands.put(CommandConstants.ECHO, this::echo);
         commands.put(CommandConstants.TYPE, this::type);
         commands.put(CommandConstants.EXIT, this::exit);
         commands.put(CommandConstants.PWD, this::pwd);
+        commands.put(CommandConstants.CD, this::cd);
 
         this.strPath = System.getenv("PATH");
         Collections.addAll(this.paths, strPath.split(":"));
@@ -80,8 +83,22 @@ public class CommandManager {
     }
 
     private void pwd(String[] args) {
-        String cwd = System.getProperty("user.dir");
         System.out.println(cwd);
+    }
+
+    private void cd(String[] args) {
+
+        // Check that the path exists
+        String path = args[0];
+
+        File dir = new File(path);
+
+        if (dir.exists() && dir.isDirectory()) {
+            cwd = args[0];
+            return;
+        }
+
+        System.out.println("cd: " + path + ": No such file or directory");
     }
 
     private void type(String[] args) {
