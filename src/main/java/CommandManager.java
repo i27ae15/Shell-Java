@@ -71,21 +71,53 @@ public class CommandManager {
         ArrayList<String> args = new ArrayList<>();
 
         int firstSpace = input.indexOf(" ");
-        if (firstSpace == -1 || firstSpace == input.length() - 1) return args;
-
-        String cleanInput = input.substring(firstSpace + 1).trim();
-
-        // Regex: match double or single quoted substrings, or unquoted words
-        Pattern pattern = Pattern.compile("\"([^\"]*)\"|'([^']*)'|(\\S+)");
-        Matcher matcher = pattern.matcher(cleanInput);
-
-        while (matcher.find()) {
-            String match = matcher.group(1);
-            if (match == null) match = matcher.group(2);
-            if (match == null) match = matcher.group(3);
-            args.add(match);
+        if (firstSpace == -1 || firstSpace == input.length() - 1) {
+            return args;
         }
 
+        String cleanInput = input.substring(firstSpace + 1).trim();
+        List<String> tokens = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+
+        boolean inDoubleQuotes = false;
+        boolean inSingleQuotes = false;
+        boolean escaping = false;
+
+        for (int i = 0; i < cleanInput.length(); i++) {
+            char c = cleanInput.charAt(i);
+
+            if (escaping) {
+                switch (c) {
+                    case '\\', '"', '$', '\n' -> current.append(c);
+                    default -> current.append('\\').append(c);
+                }
+                escaping = false;
+            }
+            else if (c == '\\' && !inSingleQuotes) {
+                escaping = true;
+            }
+            else if (c == '"' && !inSingleQuotes) {
+                inDoubleQuotes = !inDoubleQuotes;
+            }
+            else if (c == '\'' && !inDoubleQuotes) {
+                inSingleQuotes = !inSingleQuotes;
+            }
+            else if (Character.isWhitespace(c) && !inDoubleQuotes && !inSingleQuotes) {
+                if (current.length() > 0) {
+                    tokens.add(current.toString());
+                    current.setLength(0);
+                }
+            }
+            else {
+                current.append(c);
+            }
+        }
+
+        if (current.length() > 0) {
+            tokens.add(current.toString());
+        }
+
+        args.addAll(tokens);
         return args;
     }
 
@@ -127,14 +159,14 @@ public class CommandManager {
 
     }
 
-    private void echo(String toEcho) {
+    private void echo(String inputLine) {
+        // 1. Parse "echo ...whatever..." into tokens (stripping quotes, etc.)
+        ArrayList<String> tokens = getArgs(inputLine);
 
-        // Stripping "echo" of the string
-        toEcho = toEcho.substring(5, toEcho.length());
-        toEcho = toEcho.replace("'", "").replace("\"", "");
-
-        System.out.println(toEcho);
-
+        // 2. Join those tokens with exactly one space between them
+        if (!tokens.isEmpty()) {
+            System.out.println(String.join(" ", tokens));
+        }
     }
 
 
