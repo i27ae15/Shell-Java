@@ -1,4 +1,6 @@
+import java.util.ArrayList;
+
 @FunctionalInterface
 public interface Command {
-    void execute(String[] args);
+    void execute(ArrayList<String> args);
 }

@@ -1,10 +1,15 @@
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class CommandManager {
@@ -21,6 +26,7 @@ public class CommandManager {
         commands.put(CommandConstants.EXIT, this::exit);
         commands.put(CommandConstants.PWD, this::pwd);
         commands.put(CommandConstants.CD, this::cd);
+        commands.put(CommandConstants.CAT, this::cat);
 
         this.strPath = System.getenv("PATH");
 
@@ -33,11 +39,15 @@ public class CommandManager {
 
         this.scanner = scan;
 
-        String[] tokens = input.trim().split("\\s+");
+        String[] tokens = input.trim().split("\s+");
         String commandName = tokens[0].toLowerCase();
 
-        String[] args = new String[tokens.length - 1];
-        System.arraycopy(tokens, 1, args, 0, args.length);
+        ArrayList<String> args = getArgs(input);
+
+        if (commandName.equals(CommandConstants.ECHO) && (input.endsWith("'") || input.endsWith("\""))) {
+            echo(input);
+            return true;
+        }
 
         Command action = commands.get(commandName);
 
@@ -57,12 +67,35 @@ public class CommandManager {
         return false;
     }
 
-    private void runExternalProgram(String filePath, String[] args) {
+    private ArrayList<String> getArgs(String input) {
+        ArrayList<String> args = new ArrayList<>();
+
+        int firstSpace = input.indexOf(" ");
+        if (firstSpace == -1 || firstSpace == input.length() - 1) return args;
+
+        String cleanInput = input.substring(firstSpace + 1).trim();
+
+        // Regex: match double or single quoted substrings, or unquoted words
+        Pattern pattern = Pattern.compile("\"([^\"]*)\"|'([^']*)'|(\\S+)");
+        Matcher matcher = pattern.matcher(cleanInput);
+
+        while (matcher.find()) {
+            String match = matcher.group(1);
+            if (match == null) match = matcher.group(2);
+            if (match == null) match = matcher.group(3);
+            args.add(match);
+        }
+
+        return args;
+    }
+
+    private void runExternalProgram(String filePath, ArrayList<String> args) {
 
         try {
             List<String> fullCommand = new ArrayList<>();
             fullCommand.add(filePath);
-            Collections.addAll(fullCommand, args);
+            fullCommand.addAll(args);
+            Collections.addAll(fullCommand);
 
             ProcessBuilder pb = new ProcessBuilder(fullCommand);
             pb.redirectErrorStream(true);
@@ -80,11 +113,36 @@ public class CommandManager {
         }
     }
 
-    private void echo(String[] args) {
+    private void cat(ArrayList<String> input) {
+
+        for (String fileName : input) {
+            Path path = Path.of(fileName);
+            try {
+                String content = Files.readString(path);
+                System.out.print(content);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private void echo(String toEcho) {
+
+        // Stripping "echo" of the string
+        toEcho = toEcho.substring(5, toEcho.length());
+        toEcho = toEcho.replace("'", "").replace("\"", "");
+
+        System.out.println(toEcho);
+
+    }
+
+
+    private void echo(ArrayList<String> args) {
         System.out.println(String.join(" ", args));
     }
 
-    private void pwd(String[] args) {
+    private void pwd(ArrayList<String> args) {
         System.out.println(cwd);
     }
 
@@ -128,12 +186,20 @@ public class CommandManager {
         return false;
     }
 
-    private void cd(String[] args) {
+    private void cd(ArrayList<String> args) {
 
-        String path = args[0];
+        String path = args.get(0);
 
         // Check if the user wants to go back
+        if (path.startsWith("~")) {
+            setCurrentDir(System.getenv("HOME"));
+            return;
+        }
 
+        if (path.startsWith("~")) {
+            setCurrentDir(System.getenv("HOME"));
+            return;
+        }
         if (goingBack(path)) return;
         if (path.startsWith("~")) {
             setCurrentDir(System.getenv("HOME"));
@@ -160,8 +226,8 @@ public class CommandManager {
         System.out.println("cd: " + path + ": No such file or directory");
     }
 
-    private void type(String[] args) {
-        String commandName = args[0];
+    private void type(ArrayList<String> args) {
+        String commandName = args.get(0);
 
         // Look on the path first:
         if (CommandConstants.ALL_COMMANDS.contains(commandName)) {
@@ -179,9 +245,9 @@ public class CommandManager {
 
     }
 
-    private void exit(String[] args) {
+    private void exit(ArrayList<String> args) {
         scanner.close();
-        System.exit(Integer.parseInt(args[0]));
+        System.exit(Integer.parseInt(args.get(0)));
     }
 
 
