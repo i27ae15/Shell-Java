@@ -37,17 +37,19 @@ public class CommandManager {
 
         this.scanner = scan;
 
-        String[] tokens = input.trim().split("\s+");
-        String commandName = tokens[0].toLowerCase();
+        String[] commandNameAndCleanedInput = getCommandAndCleanInput(input);
+        String commandName = commandNameAndCleanedInput[0];
+        String cleanedInput = commandNameAndCleanedInput[1];
 
-
-        if (commandName.equals(CommandConstants.ECHO) && (input.endsWith("'") || input.endsWith("\""))) {
-            echo(input);
+        if (commandName.equals(CommandConstants.ECHO) && (cleanedInput.endsWith("'") || cleanedInput.endsWith("\""))) {
+            echo(cleanedInput);
             return true;
         }
 
-        ArrayList<String> args = getArgs(input);
+        ArrayList<String> args = quoterCleaner(cleanedInput);
         Command action = commands.get(commandName);
+
+        // for (String arg : args) System.err.println("FILE_NAME: " + arg);
 
         if (action != null) {
             action.execute(args);
@@ -65,15 +67,55 @@ public class CommandManager {
         return false;
     }
 
-    private ArrayList<String> getArgs(String input) {
-        ArrayList<String> args = new ArrayList<>();
+    private String[] getCommandAndCleanInput(String input) {
+        String[] result = new String[2];
 
-        int firstSpace = input.indexOf(" ");
-        if (firstSpace == -1 || firstSpace == input.length() - 1) {
-            return args;
+        String commandName = "";
+        String cleanedInput = "";
+
+        if (input.charAt(0) != '\'' && input.charAt(0) != '"') {
+            String[] tokens = input.trim().split("\s+");
+
+            commandName = tokens[0].toLowerCase();
+            cleanedInput = input.substring(commandName.length());
+        }
+        else {
+
+            // get first character
+            char firstChar = input.charAt(0);
+
+            int firstIndex = input.indexOf(firstChar);
+            int secondIndex = input.indexOf(firstChar, firstIndex + 1);
+
+            // Clean the command
+            commandName = input.substring(firstIndex, secondIndex + 1);
+            commandName = quoterCleaner(commandName).get(0);
+
+            cleanedInput = input.substring(secondIndex + 1).replaceFirst("^\\s+", "");
+
         }
 
-        String cleanInput = input.substring(firstSpace + 1).trim();
+        result[0] = commandName;
+        result[1] = cleanedInput;
+
+        return result;
+
+    }
+
+    // private ArrayList<String> getArgs(String input) {
+
+    //     int firstSpace = input.indexOf(" ");
+    //     if (firstSpace == -1 || firstSpace == input.length() - 1) {
+    //         return args;
+    //     }
+
+    //     String cleanInput = input.substring(firstSpace + 1).trim();
+
+    // }
+
+    private ArrayList<String> quoterCleaner(String input) {
+        ArrayList<String> result = new ArrayList<>();
+
         List<String> tokens = new ArrayList<>();
         StringBuilder current = new StringBuilder();
 
@@ -83,8 +125,8 @@ public class CommandManager {
 
         int parentQuote = -1;  // -1 for no parent, 0 for ' & 1 for "
 
-        for (int i = 0; i < cleanInput.length(); i++) {
-            char c = cleanInput.charAt(i);
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
 
             if (escaping) {
 
@@ -155,8 +197,9 @@ public class CommandManager {
             tokens.add(current.toString());
         }
 
-        args.addAll(tokens);
-        return args;
+        result.addAll(tokens);
+        return result;
+
     }
 
     private void runExternalProgram(String filePath, ArrayList<String> args) {
@@ -199,7 +242,7 @@ public class CommandManager {
 
     private void echo(String inputLine) {
         // 1. Parse "echo ...whatever..." into tokens (stripping quotes, etc.)
-        ArrayList<String> tokens = getArgs(inputLine);
+        ArrayList<String> tokens = quoterCleaner(inputLine);
 
         // 2. Join those tokens with exactly one space between them
         if (!tokens.isEmpty()) {
