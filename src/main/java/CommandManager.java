@@ -81,21 +81,64 @@ public class CommandManager {
         boolean inSingleQuotes = false;
         boolean escaping = false;
 
+        int parentQuote = -1;  // -1 for no parent, 0 for ' & 1 for "
+
         for (int i = 0; i < cleanInput.length(); i++) {
             char c = cleanInput.charAt(i);
 
             if (escaping) {
-                current.append(c);
+
+                if (inDoubleQuotes) {
+                    switch (c) {
+                        case '\\', '"', '$', '\n':
+                            current.append(c);
+                            break;
+                        default:
+                            current.append('\\');
+                            current.append(c);
+                            break;
+                    }
+                } else {
+                    current.append(c);
+                }
                 escaping = false;
             }
-            else if (c == '\\' && !inSingleQuotes && !inDoubleQuotes) {
+            else if (c == '\\' && !inSingleQuotes) {
                 escaping = true;
             }
-            else if (c == '"' && !inSingleQuotes) {
-                inDoubleQuotes = !inDoubleQuotes;
+            else if (c == '"') {
+
+                if (!inSingleQuotes && parentQuote == -1) {
+                    parentQuote = 1;
+                    inDoubleQuotes = true;
+                }
+                else if (inSingleQuotes && parentQuote == 0) {
+                    current.append('"');
+                    inDoubleQuotes = !inDoubleQuotes;
+                }
+                else if (inDoubleQuotes && parentQuote == 1) {
+                    inDoubleQuotes = false;
+                    inSingleQuotes = false;
+                    parentQuote = -1;
+                }
+
             }
-            else if (c == '\'' && !inDoubleQuotes) {
-                inSingleQuotes = !inSingleQuotes;
+            else if (c == '\'') {
+
+                if (!inDoubleQuotes && parentQuote == -1) {
+                    parentQuote = 0;
+                    inSingleQuotes = true;
+                }
+                else if (inDoubleQuotes && parentQuote == 1) {
+                    current.append('\'');
+                    inSingleQuotes = !inSingleQuotes;
+                }
+                else if (inSingleQuotes && parentQuote == 0) {
+                    inSingleQuotes = false;
+                    inDoubleQuotes = false;
+                    parentQuote = -1;
+                }
+
             }
             else if (Character.isWhitespace(c) && !inDoubleQuotes && !inSingleQuotes) {
                 if (current.length() > 0) {
