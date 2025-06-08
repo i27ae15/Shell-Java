@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class CommandManager {
@@ -42,13 +40,13 @@ public class CommandManager {
         String[] tokens = input.trim().split("\s+");
         String commandName = tokens[0].toLowerCase();
 
-        ArrayList<String> args = getArgs(input);
 
         if (commandName.equals(CommandConstants.ECHO) && (input.endsWith("'") || input.endsWith("\""))) {
             echo(input);
             return true;
         }
 
+        ArrayList<String> args = getArgs(input);
         Command action = commands.get(commandName);
 
         if (action != null) {
@@ -87,13 +85,10 @@ public class CommandManager {
             char c = cleanInput.charAt(i);
 
             if (escaping) {
-                switch (c) {
-                    case '\\', '"', '$', '\n' -> current.append(c);
-                    default -> current.append('\\').append(c);
-                }
+                current.append(c);
                 escaping = false;
             }
-            else if (c == '\\' && !inSingleQuotes) {
+            else if (c == '\\' && !inSingleQuotes && !inDoubleQuotes) {
                 escaping = true;
             }
             else if (c == '"' && !inSingleQuotes) {
