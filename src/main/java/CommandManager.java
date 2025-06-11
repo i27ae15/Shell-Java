@@ -24,7 +24,6 @@ public class CommandManager {
         commands.put(CommandConstants.EXIT, this::exit);
         commands.put(CommandConstants.PWD, this::pwd);
         commands.put(CommandConstants.CD, this::cd);
-        commands.put(CommandConstants.CAT, this::cat);
 
         this.strPath = System.getenv("PATH");
 
@@ -41,30 +40,55 @@ public class CommandManager {
         String commandName = commandNameAndCleanedInput[0];
         String cleanedInput = commandNameAndCleanedInput[1];
 
-        if (commandName.equals(CommandConstants.ECHO) && (cleanedInput.endsWith("'") || cleanedInput.endsWith("\""))) {
-            echo(cleanedInput);
-            return true;
-        }
-
         ArrayList<String> args = quoterCleaner(cleanedInput);
         Command action = commands.get(commandName);
 
-        // for (String arg : args) System.err.println("FILE_NAME: " + arg);
+        String[] filesToRedirect = getRedirection(args);
+
+        String redirectFrom = filesToRedirect[0];
+        String fileToRedirectTo = filesToRedirect[1];
+
+        if (commandName.equals(CommandConstants.ECHO)) {
+            echo(args, redirectFrom, fileToRedirectTo);
+            return true;
+        }
+
+        if (commandName.equals(CommandConstants.CAT)) {
+            cat(args, fileToRedirectTo);
+            return true;
+        }
 
         if (action != null) {
             action.execute(args);
             return true;
         }
 
-        // Check on environment variables
+        // Check on environment path
         String executableFile = this.findFileOnPath(commandName);
         if (executableFile != null) {
-            runExternalProgram(commandName, args);
+            runExternalProgram(commandName, args, redirectFrom, fileToRedirectTo);
             return true;
         }
 
         System.out.println(commandName + ": command not found");
         return false;
+    }
+
+    private String[] getRedirection(ArrayList<String> args) {
+        String[] toReturn = new String[2];
+
+        for (int i = 0; i < args.size(); i++) {
+            String c = args.get(i);
+            if (c.equals("1>") || c.equals(">")) {
+
+                toReturn[0] =  args.get(i - 1);
+                toReturn[1] =  args.get(i + 1);
+
+                break;
+
+            }
+        }
+        return toReturn;
     }
 
     private String[] getCommandAndCleanInput(String input) {
@@ -101,17 +125,6 @@ public class CommandManager {
         return result;
 
     }
-
-    // private ArrayList<String> getArgs(String input) {
-
-    //     int firstSpace = input.indexOf(" ");
-    //     if (firstSpace == -1 || firstSpace == input.length() - 1) {
-    //         return args;
-    //     }
-
-    //     String cleanInput = input.substring(firstSpace + 1).trim();
-
-    // }
 
     private ArrayList<String> quoterCleaner(String input) {
         ArrayList<String> result = new ArrayList<>();
@@ -202,51 +215,104 @@ public class CommandManager {
 
     }
 
-    private void runExternalProgram(String filePath, ArrayList<String> args) {
+    private void runExternalProgram(
+        String filePath,
+        ArrayList<String> args,
+        String fileToRedirectFrom,
+        String fileToRedirectTo
+    ) {
+
+        boolean printOutput = (fileToRedirectFrom == null || fileToRedirectFrom.isEmpty());
 
         try {
             List<String> fullCommand = new ArrayList<>();
             fullCommand.add(filePath);
-            fullCommand.addAll(args);
+
+            if (!printOutput) fullCommand.add(fileToRedirectFrom);
+            if (printOutput) fullCommand.addAll(args);
+
             Collections.addAll(fullCommand);
 
             ProcessBuilder pb = new ProcessBuilder(fullCommand);
             pb.redirectErrorStream(true);
             Process process = pb.start();
 
+            StringBuilder outputBuffer = new StringBuilder();
+
             try(Scanner output = new Scanner(process.getInputStream())) {
                 while (output.hasNextLine()) {
-                    System.out.println(output.nextLine());
+
+                    String line = output.nextLine();
+
+                    if (printOutput) {
+                        System.out.println(line);
+                    } else {
+                        outputBuffer.append(line).append(System.lineSeparator());
+                    }
                 }
             }
 
             process.waitFor();
+
+            if (!printOutput) FileWriter.writeToFile(outputBuffer.toString(), fileToRedirectTo);
+
         } catch (Exception e) {
             System.out.println("Failed to run program: " + e.getMessage());
         }
+
     }
 
-    private void cat(ArrayList<String> input) {
+    private void cat(List<String> input, String fileToRedirectTo) {
+        boolean redirect = (fileToRedirectTo != null && !fileToRedirectTo.isEmpty());
+        ArrayList<String> toBreak = new ArrayList<>();
+
+        toBreak.add(">");
+        toBreak.add("1>");
 
         for (String fileName : input) {
+
             Path path = Path.of(fileName);
-            try {
-                String content = Files.readString(path);
-                System.out.print(content);
-            } catch (IOException e) {
-                e.printStackTrace();
+            String output;
+
+            if (toBreak.contains(fileName)) break;
+
+            if (Files.exists(path)) {
+                try {
+                    output = Files.readString(path);
+                } catch (IOException e) {
+                    output = "cat: " + fileName + ": I/O error\n";
+                }
+            } else {
+                System.out.println("cat: " + fileName + ": No such file or directory");
+                continue;
+            }
+
+            if (redirect) {
+                try {
+                    FileWriter.writeToFile(output, fileToRedirectTo);
+                } catch (Exception e) {
+                    System.out.println("Failed to write: " + e.getMessage());
+                }
+            } else {
+                System.out.print(output);
             }
         }
-
     }
 
-    private void echo(String inputLine) {
-        // 1. Parse "echo ...whatever..." into tokens (stripping quotes, etc.)
-        ArrayList<String> tokens = quoterCleaner(inputLine);
+    private void echo(ArrayList<String> args, String redirectFrom, String fileToRedirectTo) {
 
-        // 2. Join those tokens with exactly one space between them
-        if (!tokens.isEmpty()) {
-            System.out.println(String.join(" ", tokens));
+
+        if (fileToRedirectTo != null && !fileToRedirectTo.isEmpty()) {
+            try {
+                FileWriter.writeToFile(redirectFrom + "\n", fileToRedirectTo);
+            } catch (Exception e) {
+                System.out.println("Failed to run program: " + e.getMessage());
+            }
+            return;
+        }
+
+        if (!args.isEmpty()) {
+            System.out.println(String.join(" ", args));
         }
     }
 
