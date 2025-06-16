@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -47,14 +48,15 @@ public class CommandManager {
 
         String redirectFrom = filesToRedirect[0];
         String fileToRedirectTo = filesToRedirect[1];
+        boolean isError = filesToRedirect[2] != null;
 
         if (commandName.equals(CommandConstants.ECHO)) {
-            echo(args, redirectFrom, fileToRedirectTo);
+            echo(args, redirectFrom, fileToRedirectTo, isError);
             return true;
         }
 
         if (commandName.equals(CommandConstants.CAT)) {
-            cat(args, fileToRedirectTo);
+            cat(args, fileToRedirectTo, isError);
             return true;
         }
 
@@ -75,14 +77,16 @@ public class CommandManager {
     }
 
     private String[] getRedirection(ArrayList<String> args) {
-        String[] toReturn = new String[2];
+        String[] toReturn = new String[3];
 
         for (int i = 0; i < args.size(); i++) {
             String c = args.get(i);
-            if (c.equals("1>") || c.equals(">")) {
+            if (c.equals("1>") || c.equals(">") || c.equals("2>")) {
 
                 toReturn[0] =  args.get(i - 1);
                 toReturn[1] =  args.get(i + 1);
+
+                if (c.equals("2>")) toReturn[2] = "e";
 
                 break;
 
@@ -262,32 +266,46 @@ public class CommandManager {
 
     }
 
-    private void cat(List<String> input, String fileToRedirectTo) {
+    private void cat(List<String> input, String fileToRedirectTo, boolean redirectError) {
         boolean redirect = (fileToRedirectTo != null && !fileToRedirectTo.isEmpty());
         ArrayList<String> toBreak = new ArrayList<>();
 
         toBreak.add(">");
         toBreak.add("1>");
+        toBreak.add("2>");
+
 
         for (String fileName : input) {
 
-            Path path = Path.of(fileName);
-            String output;
-
+            boolean isError = false;
             if (toBreak.contains(fileName)) break;
 
-            if (Files.exists(path)) {
+            String output;
+            Path path = Path.of(fileName);
+            boolean fileExists = Files.exists(path);
+
+            if (fileExists) {
                 try {
                     output = Files.readString(path);
                 } catch (IOException e) {
                     output = "cat: " + fileName + ": I/O error\n";
                 }
+
             } else {
-                System.out.println("cat: " + fileName + ": No such file or directory");
-                continue;
+
+                output = "cat: " + fileName + ": No such file or directory";
+                isError = true;
+
+                if (!redirectError) {
+                    System.out.println(output);
+                    continue;
+                } else {
+                    output += '\n';
+                }
+
             }
 
-            if (redirect) {
+            if (redirect && (!redirectError && !isError || redirectError && isError)) {
                 try {
                     FileWriter.writeToFile(output, fileToRedirectTo);
                 } catch (Exception e) {
@@ -299,12 +317,17 @@ public class CommandManager {
         }
     }
 
-    private void echo(ArrayList<String> args, String redirectFrom, String fileToRedirectTo) {
+    private void echo(ArrayList<String> args, String redirectFrom, String fileToRedirectTo, boolean isError) {
 
 
         if (fileToRedirectTo != null && !fileToRedirectTo.isEmpty()) {
             try {
-                FileWriter.writeToFile(redirectFrom + "\n", fileToRedirectTo);
+                if (isError) {
+                    FileWriter.writeToFile("", fileToRedirectTo);
+                    System.out.println(redirectFrom);
+                } else {
+                    FileWriter.writeToFile(redirectFrom + "\n", fileToRedirectTo);
+                }
             } catch (Exception e) {
                 System.out.println("Failed to run program: " + e.getMessage());
             }
