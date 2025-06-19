@@ -102,12 +102,4 @@ public class FileUtils {
         return Files.exists(Path.of(filePath));
     }
 
-    public static boolean isFileEmpty(String filePath) {
-        try {
-            return Files.size(Path.of(filePath)) == 0;
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
 }
