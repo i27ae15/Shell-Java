@@ -51,7 +51,7 @@ public class ContextManager {
 
                 case ContextManager.APPEND_ERROR:
 
-                    if (FileUtils.fileExists(redirectTo) && !FileUtils.isFileEmpty(redirectTo)) {
+                    if (FileUtils.fileExists(redirectTo)) {
                         FileUtils.appendToFile(error, redirectTo);
                     } else {
                         FileUtils.writeToFile(error, redirectTo);
