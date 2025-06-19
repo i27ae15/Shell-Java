@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
 @FunctionalInterface
-public interface Command {
+public interface VoidCommand {
     void execute(ArrayList<String> args);
 }
