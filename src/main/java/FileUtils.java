@@ -1,6 +1,9 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
+import javax.sound.sampled.Line;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,7 +42,6 @@ public class FileUtils {
                     } else {
                         output.append(line + '\n');
                     }
-
                 }
             }
 
@@ -48,6 +50,8 @@ public class FileUtils {
         } catch (Exception e) {
             error.append("Failed to run program: " + e.getMessage());
         }
+
+
 
         return new StringPair(output.toString(), error.toString());
     }
@@ -96,6 +100,14 @@ public class FileUtils {
 
     public static boolean fileExists(String filePath) {
         return Files.exists(Path.of(filePath));
+    }
+
+    public static boolean isFileEmpty(String filePath) {
+        try {
+            return Files.size(Path.of(filePath)) == 0;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
 }

@@ -4,7 +4,7 @@ import java.util.Set;
 
 public class CommandUtils {
 
-    public static final Set<String> REDIRECT_TOKENS = Set.of("1>", ">", "2>", ">>", "1>>");
+    public static final Set<String> REDIRECT_TOKENS = Set.of(">", "1>", "2>", ">>", "1>>", "2>>");
 
     static ArrayList<String> quoterCleaner(String input) {
         ArrayList<String> result = new ArrayList<>();

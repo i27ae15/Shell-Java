@@ -5,6 +5,7 @@ public class ContextManager {
     private static final String ERROR_REDIRECTION = "2>";
     private static final String APPEND_REDIRECTION = ">>";
     private static final String APPEND_REDIRECTION1 = "1>>";
+    private static final String APPEND_ERROR = "2>>";
 
     public static void outPutManager(
         StringPair commandResult,
@@ -40,10 +41,21 @@ public class ContextManager {
                     } else {
                         FileUtils.writeToFile(output, redirectTo);
                     }
+                    if (!error.isEmpty()) ContextManager.print(error);
                     break;
 
                 case ContextManager.ERROR_REDIRECTION:
                     FileUtils.writeToFile(error, redirectTo);
+                    if (!output.isEmpty()) ContextManager.print(output);
+                    break;
+
+                case ContextManager.APPEND_ERROR:
+
+                    if (FileUtils.fileExists(redirectTo) && !FileUtils.isFileEmpty(redirectTo)) {
+                        FileUtils.appendToFile(error, redirectTo);
+                    } else {
+                        FileUtils.writeToFile(error, redirectTo);
+                    }
                     if (!output.isEmpty()) ContextManager.print(output);
                     break;
 
