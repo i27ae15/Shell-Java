@@ -1,8 +1,8 @@
+package utils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
-import javax.sound.sampled.Line;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,7 +11,7 @@ import java.nio.file.StandardOpenOption;
 
 public class FileUtils {
 
-    static StringPair runExternalProgram(
+    public static StringPair runExternalProgram(
         String filePath,
         ArrayList<String> args
     ) {
@@ -24,7 +24,7 @@ public class FileUtils {
             fullCommand.add(filePath);
 
             for (String arg : args) {
-                if (CommandUtils.REDIRECT_TOKENS.contains(arg)) break;
+                if (command.CommandUtils.REDIRECT_TOKENS.contains(arg)) break;
                 fullCommand.add(arg);
             }
 
@@ -50,8 +50,6 @@ public class FileUtils {
         } catch (Exception e) {
             error.append("Failed to run program: " + e.getMessage());
         }
-
-
 
         return new StringPair(output.toString(), error.toString());
     }

@@ -1,3 +1,7 @@
+package context;
+
+import utils.FileUtils;
+
 public class ContextManager {
 
     private static final String REDIRECTION = ">";
@@ -8,7 +12,7 @@ public class ContextManager {
     private static final String APPEND_ERROR = "2>>";
 
     public static void outPutManager(
-        StringPair commandResult,
+        utils.StringPair commandResult,
         String redirectFrom,
         String redirectTo,
         String redirectionType
@@ -68,10 +72,11 @@ public class ContextManager {
     }
 
     private static void print(String toPrint) {
-        System.out.print(toPrint);
-        if (!toPrint.isEmpty() && toPrint.charAt(toPrint.length() - 1) != '\n') {
-            System.out.println();
+        utils.Printer.print(toPrint.replace("\n", "\r\n"));
+        if (!toPrint.endsWith("\n")) {
+            utils.Printer.println("");       // keep the prompt on a fresh line
         }
     }
+
 
 }

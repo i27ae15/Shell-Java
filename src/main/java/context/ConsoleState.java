@@ -1,3 +1,5 @@
+package context;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,6 +9,7 @@ public class ConsoleState {
     private final String strPath;
     private final ArrayList<String> paths = new ArrayList<>();
     private String cwd;
+    private autocompletion.Trie autocompletionTrie;
 
     public ConsoleState() {
         this.strPath = System.getenv("PATH");
@@ -14,6 +17,7 @@ public class ConsoleState {
         setCurrentDir(System.getProperty("user.dir"));
 
         Collections.addAll(this.paths, strPath.split(":"));
+        autocompletionTrie = new autocompletion.Trie();
 
     }
 
@@ -37,7 +41,7 @@ public class ConsoleState {
             int toAdd = elements.length - count;
 
             if (0 >= toAdd) {
-                System.out.println("cd: " + path + ": No such file or directory");
+                utils.Printer.println("cd: " + path + ": No such file or directory");
                 return false;
             }
 
@@ -77,6 +81,16 @@ public class ConsoleState {
         }
 
         cwd = absolutePath;
+    }
+
+    public void printAutocompletion(String input) {
+
+        ArrayList<String> options = autocompletionTrie.getPossibleOptions(input);
+
+        for (String opt : options) {
+            utils.Printer.print("$ " + opt + " ");
+        }
+
     }
 
 }
