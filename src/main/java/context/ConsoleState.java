@@ -83,7 +83,11 @@ public class ConsoleState {
         cwd = absolutePath;
     }
 
-    public void printAutocompletion(String input) {
+    public ArrayList<String> getAutocompletion(String input) {
+        return getAutocompletion(input, true);
+    }
+
+    public ArrayList<String> getAutocompletion(String input, boolean printValues) {
 
         ArrayList<String> options = autocompletionTrie.getPossibleOptions(input);
 
@@ -91,6 +95,7 @@ public class ConsoleState {
             utils.Printer.print("$ " + opt + " ");
         }
 
+        return options;
     }
 
 }

@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Scanner;
 import context.ConsoleState;
 
@@ -42,7 +43,8 @@ public class Main {
                     break;
 
                 case '\t':
-                    consoleState.printAutocompletion(buffer.toString());
+                    ArrayList<String> options = consoleState.getAutocompletion(buffer.toString());
+                    if (options.size() == 1) buffer.replace(0, buffer.length(), options.get(0) + "  ");
                     break;
 
                 default:

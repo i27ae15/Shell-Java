@@ -74,7 +74,8 @@ public class ContextManager {
     private static void print(String toPrint) {
         utils.Printer.print(toPrint.replace("\n", "\r\n"));
         if (!toPrint.endsWith("\n")) {
-            utils.Printer.println("");       // keep the prompt on a fresh line
+            // keep the prompt on a fresh line
+            utils.Printer.println("");
         }
     }
 
