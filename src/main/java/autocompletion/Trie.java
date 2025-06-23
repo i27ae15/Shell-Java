@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class Trie {
 
-    private final String[] WordsInTrie = new String[]{"echo", "exit"};
+    private final String[] BUILT_IN_WORDS = new String[]{"echo", "exit"};
     private TrieNode root;
 
     public Trie() {
@@ -25,7 +25,7 @@ public class Trie {
 
         root = new TrieNode('*');
 
-        for (String word : WordsInTrie) {
+        for (String word : BUILT_IN_WORDS) {
             addWord(word);
         }
 

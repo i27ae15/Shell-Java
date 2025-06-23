@@ -18,6 +18,27 @@ public class ConsoleState {
 
         Collections.addAll(this.paths, strPath.split(":"));
         autocompletionTrie = new autocompletion.Trie();
+        loadFilesToTrie();
+    }
+
+    private void loadFilesToTrie() {
+
+        for (String dir : paths) {
+
+            File directory = new File(dir);
+
+            if (directory.exists() && directory.isDirectory()) {
+                File[] files = directory.listFiles();
+
+                if (files == null) continue;
+
+                for (File file : files) {
+                    autocompletionTrie.addWord(file.getName());
+                }
+
+            }
+
+        }
 
     }
 
