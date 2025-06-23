@@ -1,7 +1,7 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Scanner;
+
 import context.ConsoleState;
 
 public class Main {
@@ -26,6 +26,7 @@ public class Main {
         final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         utils.Printer.print("$ ");
+        int times = 0;
 
         while (true) {
 
@@ -43,8 +44,9 @@ public class Main {
                     break;
 
                 case '\t':
-                    ArrayList<String> options = consoleState.getAutocompletion(buffer.toString());
-                    if (options.size() == 1) buffer.replace(0, buffer.length(), options.get(0) + "  ");
+                    times++;
+                    String option = consoleState.autocompletionManager(buffer.toString());
+                    if (!option.isEmpty()) buffer.replace(0, buffer.length(), option + "  ");
                     break;
 
                 default:

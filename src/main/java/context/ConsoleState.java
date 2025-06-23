@@ -10,6 +10,8 @@ public class ConsoleState {
     private final ArrayList<String> paths = new ArrayList<>();
     private String cwd;
     private autocompletion.Trie autocompletionTrie;
+    private utils.StringPair lastAutoCompletionCalled;
+    private ArrayList<String> lastAutocompletionOptions;
 
     public ConsoleState() {
         this.strPath = System.getenv("PATH");
@@ -17,8 +19,13 @@ public class ConsoleState {
         setCurrentDir(System.getProperty("user.dir"));
 
         Collections.addAll(this.paths, strPath.split(":"));
+
         autocompletionTrie = new autocompletion.Trie();
         loadFilesToTrie();
+
+        lastAutoCompletionCalled = new utils.StringPair(cwd, "no-last-input");
+        lastAutocompletionOptions = new ArrayList<>();
+
     }
 
     private void loadFilesToTrie() {
@@ -104,20 +111,34 @@ public class ConsoleState {
         cwd = absolutePath;
     }
 
-    public ArrayList<String> getAutocompletion(String input) {
-        return getAutocompletion(input, true);
-    }
+    public String autocompletionManager(String input) {
+        String workingDir = lastAutoCompletionCalled.first();
+        String toComplete = lastAutoCompletionCalled.second();
 
-    public ArrayList<String> getAutocompletion(String input, boolean printValues) {
+        if (workingDir.equals(cwd) && toComplete.equals(input)) {
+            StringBuilder toPrint = new StringBuilder();
 
-        ArrayList<String> options = autocompletionTrie.getPossibleOptions(input);
-
-        for (String opt : options) {
-            utils.Printer.print("$ " + opt + " ");
+            for (String opt : lastAutocompletionOptions) {
+                toPrint.append(opt + "  ");
+            }
+            utils.Printer.println("$ " + toComplete);
+            utils.Printer.println(toPrint.toString());
+            utils.Printer.println("$ " + toComplete);
+            return "";
         }
 
-        if (options.size() == 0) utils.Printer.print(String.valueOf('\u0007'));
-        return options;
+        lastAutocompletionOptions = autocompletionTrie.getPossibleOptions(input);
+        lastAutoCompletionCalled = new utils.StringPair(workingDir, input);
+
+        if (lastAutocompletionOptions.size() > 1 || lastAutocompletionOptions.size() == 0) {
+            utils.Printer.print(String.valueOf('\u0007'));
+            return "";
+        }
+
+        String onlyOption = lastAutocompletionOptions.get(0);
+
+        utils.Printer.print("$ " + onlyOption + " ");
+        return onlyOption;
     }
 
 }

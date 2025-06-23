@@ -1,6 +1,7 @@
 package autocompletion;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 
 public class Trie {
@@ -86,6 +87,7 @@ public class Trie {
         // perform a search to get to the last node that we can return
         if (node != null) dfs(node, word, possibleOptions);
 
+        Collections.sort(possibleOptions);
         return possibleOptions;
 
     }
@@ -99,10 +101,8 @@ public class Trie {
             Character ch = entry.getKey();
             TrieNode child = entry.getValue();
 
-            word += ch;
-
-            if (child.getIsEndOfWord()) possibleOptions.add(word);
-            dfs(child, word, possibleOptions);
+            if (child.getIsEndOfWord()) possibleOptions.add(word + ch);
+            dfs(child, word + ch, possibleOptions);
 
         }
 
