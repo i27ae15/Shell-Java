@@ -95,6 +95,7 @@ public class ConsoleState {
             utils.Printer.print("$ " + opt + " ");
         }
 
+        if (options.size() == 0) utils.Printer.print(String.valueOf('\u0007'));
         return options;
     }
 
