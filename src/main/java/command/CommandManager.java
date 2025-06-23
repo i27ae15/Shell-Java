@@ -115,16 +115,7 @@ public class CommandManager {
             return;
         }
 
-        if (path.startsWith("~")) {
-            consoleState.setCurrentDir(System.getenv("HOME"));
-            return;
-        }
         if (consoleState.goBack(path)) return;
-        if (path.startsWith("~")) {
-            consoleState.setCurrentDir(System.getenv("HOME"));
-            return;
-        }
-
 
         if (path.startsWith("./")) {
             // delete the .
