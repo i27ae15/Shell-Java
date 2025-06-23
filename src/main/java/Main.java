@@ -26,7 +26,6 @@ public class Main {
         final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         utils.Printer.print("$ ");
-        int times = 0;
 
         while (true) {
 
@@ -44,7 +43,6 @@ public class Main {
                     break;
 
                 case '\t':
-                    times++;
                     String option = consoleState.autocompletionManager(buffer.toString());
                     if (!option.isEmpty()) buffer.replace(0, buffer.length(), option + "  ");
                     break;
