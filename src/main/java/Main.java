@@ -44,7 +44,10 @@ public class Main {
 
                 case '\t':
                     String option = consoleState.autocompletionManager(buffer.toString());
-                    if (!option.isEmpty()) buffer.replace(0, buffer.length(), option + "  ");
+                    if (!option.isEmpty()) {
+                        buffer.replace(0, buffer.length(), option);
+                        utils.Printer.print("$ " + option);
+                    }
                     break;
 
                 default:

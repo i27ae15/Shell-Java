@@ -66,7 +66,6 @@ public class Trie {
             TrieNode nextNode = currentNode.getChild(word.charAt(idx));
 
             if (nextNode == null) return null;
-            // utils.Printer.println("NODE_VALUE: " + nextNode.getValue());
 
             currentNode = nextNode;
             idx++;

@@ -3,6 +3,8 @@ package context;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ConsoleState {
 
@@ -111,6 +113,29 @@ public class ConsoleState {
         cwd = absolutePath;
     }
 
+    private String multipleAutocompletionManager(String current, ArrayList<String> options) {
+        Set<Integer> sizes = new HashSet<>();
+
+        String nextOption = "";
+        int minSize = current.length();
+
+        for (String option : options) {
+
+            if (sizes.contains(option.length())) {
+                return "";
+            }
+
+            if ((nextOption.length() > option.length() || nextOption.isEmpty()) && option.length() > minSize) {
+                nextOption = option;
+            }
+
+            sizes.add(option.length());
+        }
+
+        return nextOption;
+
+    }
+
     public String autocompletionManager(String input) {
         String workingDir = lastAutoCompletionCalled.first();
         String toComplete = lastAutoCompletionCalled.second();
@@ -131,14 +156,19 @@ public class ConsoleState {
         lastAutoCompletionCalled = new utils.StringPair(workingDir, input);
 
         if (lastAutocompletionOptions.size() > 1 || lastAutocompletionOptions.size() == 0) {
-            utils.Printer.print(String.valueOf('\u0007'));
-            return "";
+
+            String nextOption = multipleAutocompletionManager(input, lastAutocompletionOptions);
+
+            if (nextOption.isEmpty()) {
+                utils.Printer.print(String.valueOf('\u0007'));
+                return "";
+            }
+
+            return nextOption;
         }
 
         String onlyOption = lastAutocompletionOptions.get(0);
-
-        utils.Printer.print("$ " + onlyOption + " ");
-        return onlyOption;
+        return onlyOption + " ";
     }
 
 }
