@@ -10,6 +10,7 @@ public class ContextManager {
     private static final String APPEND_REDIRECTION = ">>";
     private static final String APPEND_REDIRECTION1 = "1>>";
     private static final String APPEND_ERROR = "2>>";
+    private static final String PIPE_LINE = "|";
 
     public static void outPutManager(
         utils.StringPair commandResult,
@@ -54,7 +55,6 @@ public class ContextManager {
                     break;
 
                 case ContextManager.APPEND_ERROR:
-
                     if (FileUtils.fileExists(redirectTo)) {
                         FileUtils.appendToFile(error, redirectTo);
                     } else {
@@ -62,6 +62,10 @@ public class ContextManager {
                     }
                     if (!output.isEmpty()) ContextManager.print(output);
                     break;
+
+                case ContextManager.PIPE_LINE:
+                    ContextManager.print("PIPELINE_TO: " + redirectTo);
+                    ContextManager.print("OUTPUT: " + output);
 
                 default:
                     break;

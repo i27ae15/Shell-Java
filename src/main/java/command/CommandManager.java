@@ -3,6 +3,7 @@ package command;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -27,7 +28,58 @@ public class CommandManager {
         this.scanner = scanner;
     }
 
+    private boolean pipeLineManager(String input) {
+
+        String[] commands = input.split("\\s*\\|\\s*");
+        List<ProcessBuilder> processBuilders = new ArrayList<>();
+
+        for (String command : commands) {
+
+            String[] commandNameAndCleanedInput = CommandUtils.getCommandAndCleanInput(command);
+            String commandName = commandNameAndCleanedInput[0];
+            String cleanedInput = commandNameAndCleanedInput[1];
+
+            ArrayList<String> args = CommandUtils.quoterCleaner(cleanedInput);
+            String executableFile = consoleState.findFileOnPath(commandName);
+
+            if (executableFile == null) {
+                utils.Printer.println(commandName + ": Command not found");
+                return false;
+            }
+
+            ArrayList<String> fullCommand = new ArrayList<>();
+            fullCommand.add(executableFile);
+            fullCommand.addAll(args);
+
+            processBuilders.add(new ProcessBuilder(fullCommand));
+        }
+
+        try {
+            List<Process> processes = ProcessBuilder.startPipeline(processBuilders);
+
+            Process lastProcess = processes.get(processes.size() - 1);
+            try (var reader = new java.io.BufferedReader(new java.io.InputStreamReader(lastProcess.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    utils.Printer.println(line);
+                }
+
+                for (Process process : processes) {
+                    process.waitFor();
+                }
+            }
+        } catch (java.io.IOException | InterruptedException e) {
+            utils.Printer.println("Pipeline executed failed: " + e.getMessage());
+            return false;
+        }
+
+        return true;
+
+    }
+
     public boolean processCommand(String input) {
+
+        if (input.contains("|")) return pipeLineManager(input);
 
         String[] commandNameAndCleanedInput = CommandUtils.getCommandAndCleanInput(input);
         String commandName = commandNameAndCleanedInput[0];
