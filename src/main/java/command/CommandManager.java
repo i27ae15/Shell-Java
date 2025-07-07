@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import utils.Printer;
+import utils.StringPair;
+
 
 public class CommandManager {
 
@@ -29,52 +32,90 @@ public class CommandManager {
     }
 
     private boolean pipeLineManager(String input) {
-
         String[] commands = input.split("\\s*\\|\\s*");
         List<ProcessBuilder> processBuilders = new ArrayList<>();
 
-        for (String command : commands) {
+        // First, identify the very last command in the pipeline.
+        String lastCommandString = commands[commands.length - 1];
+        String[] lastCommandParts = CommandUtils.getCommandAndCleanInput(lastCommandString);
+        String lastCommandName = lastCommandParts[0];
+        ReturnableCommand lastAction = returnableCommands.get(lastCommandName);
 
-            String[] commandNameAndCleanedInput = CommandUtils.getCommandAndCleanInput(command);
-            String commandName = commandNameAndCleanedInput[0];
-            String cleanedInput = commandNameAndCleanedInput[1];
-
-            ArrayList<String> args = CommandUtils.quoterCleaner(cleanedInput);
-            String executableFile = consoleState.findFileOnPath(commandName);
-
-            if (executableFile == null) {
-                utils.Printer.println(commandName + ": Command not found");
-                return false;
+        // CASE 1: The pipeline ends with a built-in command.
+        if (lastAction != null) {
+            // Build a pipeline for all commands that come BEFORE the final built-in.
+            for (int i = 0; i < commands.length - 1; i++) {
+                String[] parts = CommandUtils.getCommandAndCleanInput(commands[i]);
+                String name = parts[0];
+                String cleaned = parts[1];
+                ArrayList<String> args = CommandUtils.quoterCleaner(cleaned);
+                String executableFile = consoleState.findFileOnPath(name);
+                if (executableFile == null) {
+                    utils.Printer.println(name + ": Command not found");
+                    return true;
+                }
+                ArrayList<String> fullCommand = new ArrayList<>();
+                fullCommand.add(executableFile);
+                fullCommand.addAll(args);
+                processBuilders.add(new ProcessBuilder(fullCommand));
             }
 
-            ArrayList<String> fullCommand = new ArrayList<>();
-            fullCommand.add(executableFile);
-            fullCommand.addAll(args);
-
-            processBuilders.add(new ProcessBuilder(fullCommand));
-        }
-
-        try {
-            List<Process> processes = ProcessBuilder.startPipeline(processBuilders);
-
-            Process lastProcess = processes.get(processes.size() - 1);
-            try (var reader = new java.io.BufferedReader(new java.io.InputStreamReader(lastProcess.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    utils.Printer.println(line);
+            try {
+                // If there was a pipeline before the built-in (e.g., the 'ls' command)...
+                if (!processBuilders.isEmpty()) {
+                    List<Process> precedingProcesses = ProcessBuilder.startPipeline(processBuilders);
+                    // We must wait for the preceding processes to finish.
+                    for (Process p : precedingProcesses) {
+                        p.waitFor();
+                    }
                 }
 
+                // Now that the preceding pipeline is done, execute the final built-in command.
+                ArrayList<String> lastArgs = CommandUtils.quoterCleaner(lastCommandParts[1]);
+                StringPair output = lastAction.execute(lastArgs);
+                context.ContextManager.outPutManager(output, null, null, null);
+
+            } catch (java.io.IOException | InterruptedException e) {
+                utils.Printer.println("Pipeline execution failed: " + e.getMessage());
+            }
+
+            return true; // We have fully handled this pipeline.
+
+        } else {
+            // CASE 2: The pipeline ends with an external command.
+            // This logic is for pipelines like 'echo | wc'.
+            for (String command : commands) {
+                String[] parts = CommandUtils.getCommandAndCleanInput(command);
+                String name = parts[0];
+                ArrayList<String> args = CommandUtils.quoterCleaner(parts[1]);
+                String executableFile = consoleState.findFileOnPath(name);
+                if (executableFile == null) {
+                    utils.Printer.println(name + ": Command not found");
+                    return true;
+                }
+                ArrayList<String> fullCommand = new ArrayList<>();
+                fullCommand.add(executableFile);
+                fullCommand.addAll(args);
+                processBuilders.add(new ProcessBuilder(fullCommand));
+            }
+
+            try {
+                List<Process> processes = ProcessBuilder.startPipeline(processBuilders);
+                Process lastProcess = processes.get(processes.size() - 1);
+                try (var reader = new java.io.BufferedReader(new java.io.InputStreamReader(lastProcess.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        utils.Printer.println(line);
+                    }
+                }
                 for (Process process : processes) {
                     process.waitFor();
                 }
+            } catch (java.io.IOException | InterruptedException e) {
+                utils.Printer.println("Pipeline execution failed: " + e.getMessage());
             }
-        } catch (java.io.IOException | InterruptedException e) {
-            utils.Printer.println("Pipeline executed failed: " + e.getMessage());
-            return false;
+            return true;
         }
-
-        return true;
-
     }
 
     public boolean processCommand(String input) {
