@@ -25,6 +25,7 @@ public class CommandManager {
 
         voidCommands.put(CommandConstants.CD, this::cd);
         voidCommands.put(CommandConstants.EXIT, this::exit);
+        voidCommands.put(CommandConstants.HISTORY, this::history);
 
         this.consoleState = consoleState;
         this.scanner = scanner;
@@ -119,6 +120,7 @@ public class CommandManager {
 
     public boolean processCommand(String input) {
 
+        consoleState.addToHistory(input);
         if (input.contains("|")) return pipeLineManager(input);
 
         String[] commandNameAndCleanedInput = CommandUtils.getCommandAndCleanInput(input);
@@ -231,6 +233,10 @@ public class CommandManager {
     private void exit(ArrayList<String> args) {
         scanner.close();
         System.exit(Integer.parseInt(args.get(0)));
+    }
+
+    private void history(ArrayList<String> args) {
+        consoleState.printHistory();
     }
 
 }

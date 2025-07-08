@@ -14,6 +14,7 @@ public class ConsoleState {
     private autocompletion.Trie autocompletionTrie;
     private utils.StringPair lastAutoCompletionCalled;
     private ArrayList<String> lastAutocompletionOptions;
+    private ArrayList<String> history;
 
     public ConsoleState() {
         this.strPath = System.getenv("PATH");
@@ -27,6 +28,7 @@ public class ConsoleState {
 
         lastAutoCompletionCalled = new utils.StringPair(cwd, "no-last-input");
         lastAutocompletionOptions = new ArrayList<>();
+        history = new ArrayList<>();
 
     }
 
@@ -169,6 +171,16 @@ public class ConsoleState {
 
         String onlyOption = lastAutocompletionOptions.get(0);
         return onlyOption + " ";
+    }
+
+    public void addToHistory(String toHistory) {
+        history.add(toHistory);
+    }
+
+    public void printHistory() {
+        for (int i = 0; history.size() > i; i++) {
+            utils.Printer.println("    " + i + 1 + "  " + history.get(i));
+        }
     }
 
 }
