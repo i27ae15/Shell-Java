@@ -15,6 +15,7 @@ public class ConsoleState {
     private utils.StringPair lastAutoCompletionCalled;
     private ArrayList<String> lastAutocompletionOptions;
     private ArrayList<String> history;
+    private int historyIdx;
 
     public ConsoleState() {
         this.strPath = System.getenv("PATH");
@@ -29,6 +30,7 @@ public class ConsoleState {
         lastAutoCompletionCalled = new utils.StringPair(cwd, "no-last-input");
         lastAutocompletionOptions = new ArrayList<>();
         history = new ArrayList<>();
+        historyIdx = 0;
 
     }
 
@@ -175,6 +177,7 @@ public class ConsoleState {
 
     public void addToHistory(String toHistory) {
         history.add(toHistory);
+        historyIdx = history.size() - 1;
     }
 
     public void printHistory(int limit) {
@@ -186,6 +189,23 @@ public class ConsoleState {
             utils.Printer.println("    " + String.valueOf(i + 1) + "  " + history.get(i));
         }
 
+    }
+
+    public String getPreviousCommand() {
+
+        String command = history.get(historyIdx);
+
+        historyIdx = historyIdx > 0 ? historyIdx - 1 : 0;
+
+        return command;
+    }
+
+    public String getNextCommand() {
+        String command = history.get(historyIdx);
+
+        historyIdx = history.size() - 1 > historyIdx ? historyIdx + 1 : history.size();
+
+        return command;
     }
 
 }

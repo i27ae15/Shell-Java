@@ -50,6 +50,33 @@ public class Main {
                     }
                     break;
 
+                case '\u001B': // ESC character (27 in decimal)
+                    // Read the next two characters to determine which arrow key
+                    char bracket = (char) reader.read();
+                    char arrow = (char) reader.read();
+                    String command = "";
+
+                    if (bracket == '[') {
+                        switch (arrow) {
+                            case 'A': // Up arrow
+                                command = consoleState.getPreviousCommand();
+                                break;
+
+                            case 'B': // Down arrow
+                                command = consoleState.getNextCommand();
+                                break;
+                            }
+
+                            System.out.print("\r\033[K"); // \r goes to start, \033[K clears to end of line
+
+                            // Update the buffer with the new command
+                            buffer.setLength(0);
+                            buffer.append(command);
+                            utils.Printer.print ("$ " + command);
+                        }
+
+                    break;
+
                 default:
                     buffer.append(c);
                     System.out.print(c);
