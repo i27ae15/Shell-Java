@@ -177,10 +177,15 @@ public class ConsoleState {
         history.add(toHistory);
     }
 
-    public void printHistory() {
-        for (int i = 0; history.size() > i; i++) {
-            utils.Printer.println("    " + i + 1 + "  " + history.get(i));
+    public void printHistory(int limit) {
+        int i = 0;
+
+        if (limit != -1) i = history.size() - limit;
+
+        for (; history.size() > i; i++) {
+            utils.Printer.println("    " + String.valueOf(i + 1) + "  " + history.get(i));
         }
+
     }
 
 }

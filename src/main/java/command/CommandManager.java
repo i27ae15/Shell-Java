@@ -236,7 +236,9 @@ public class CommandManager {
     }
 
     private void history(ArrayList<String> args) {
-        consoleState.printHistory();
+        int limit = -1;
+        if (args.size() > 0) limit = Integer.parseInt(args.get(0));
+        consoleState.printHistory(limit);
     }
 
 }
