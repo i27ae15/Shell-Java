@@ -14,8 +14,13 @@ public class ConsoleState {
     private autocompletion.Trie autocompletionTrie;
     private utils.StringPair lastAutoCompletionCalled;
     private ArrayList<String> lastAutocompletionOptions;
+
+    // History
     private ArrayList<String> history;
     private int historyIdx;
+    private boolean previousPressed;
+    private boolean nextPressed;
+
 
     public ConsoleState() {
         this.strPath = System.getenv("PATH");
@@ -177,7 +182,7 @@ public class ConsoleState {
 
     public void addToHistory(String toHistory) {
         history.add(toHistory);
-        historyIdx = history.size() - 1;
+        historyIdx = history.size();
     }
 
     public void printHistory(int limit) {
@@ -189,21 +194,42 @@ public class ConsoleState {
             utils.Printer.println("    " + String.valueOf(i + 1) + "  " + history.get(i));
         }
 
+        previousPressed = false;
+        nextPressed = false;
+
     }
 
     public String getPreviousCommand() {
 
+        historyIdx--;
+        if (nextPressed) historyIdx--;
+
+        if (0 > historyIdx) {
+            historyIdx = 0;
+        }
+
         String command = history.get(historyIdx);
 
-        historyIdx = historyIdx > 0 ? historyIdx - 1 : 0;
+        previousPressed = true;
+        nextPressed = false;
 
         return command;
     }
 
     public String getNextCommand() {
-        String command = history.get(historyIdx);
 
-        historyIdx = history.size() - 1 > historyIdx ? historyIdx + 1 : history.size();
+        if (previousPressed) historyIdx++;
+        String command;
+
+        if (historyIdx >= history.size()) {
+            historyIdx = history.size() - 1;
+            command = "";
+        } else {
+            command = history.get(historyIdx);
+        }
+
+        nextPressed = true;
+        previousPressed = false;
 
         return command;
     }
