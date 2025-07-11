@@ -1,11 +1,19 @@
 package command;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 import utils.StringPair;
 
@@ -236,8 +244,35 @@ public class CommandManager {
     }
 
     private void history(ArrayList<String> args) {
+
+        // Check the first arg which can vary
+        String argument = "";
+        if (args.size() > 0) argument = args.get(0);
+
+        if (argument.equals("-r")) {
+
+            String fileName = args.get(1);
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+
+                    if (line.isEmpty()) continue;
+                    consoleState.addToHistory(line);
+
+                }
+
+
+            } catch (IOException e ) {
+                utils.Printer.println("FILE READING FAILED: " + e.getMessage());
+            }
+            return;
+        }
+
+
         int limit = -1;
-        if (args.size() > 0) limit = Integer.parseInt(args.get(0));
+        if (!argument.isEmpty()) limit = Integer.parseInt(argument);
         consoleState.printHistory(limit);
     }
 

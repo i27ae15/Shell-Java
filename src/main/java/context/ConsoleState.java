@@ -234,4 +234,16 @@ public class ConsoleState {
         return command;
     }
 
+    public String getLastHistoryLine() {
+        return getHistoryLine(-1);
+    }
+
+    public String getHistoryLine(int idx) {
+        if (0 > idx || idx >= history.size()) {
+            return history.get(history.size() - 1);
+        }
+
+        return history.get(idx);
+    }
+
 }
