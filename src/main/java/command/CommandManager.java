@@ -250,7 +250,7 @@ public class CommandManager {
         if (args.size() > 0) argument = args.get(0);
 
         switch (argument) {
-            case "-r": {
+            case "-r": { // For reading from history file
                 String fileName = args.get(1);
 
                 try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
@@ -270,10 +270,17 @@ public class CommandManager {
                 break;
             }
 
-            case "-w": {
+            case "-w": { // For writing a history file
                 String fileName = args.get(1);
 
                 consoleState.writeHistoryFromFile(fileName);
+                break;
+            }
+
+            case "-a": { // For adding to a history file
+                String fileName = args.get(1);
+
+                consoleState.appendToHistoryFile(fileName);
                 break;
             }
 

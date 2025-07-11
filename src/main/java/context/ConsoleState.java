@@ -20,7 +20,7 @@ public class ConsoleState {
     private int historyIdx;
     private boolean previousPressed;
     private boolean nextPressed;
-
+    private int historyAppendIdx;
 
     public ConsoleState() {
         this.strPath = System.getenv("PATH");
@@ -36,6 +36,7 @@ public class ConsoleState {
         lastAutocompletionOptions = new ArrayList<>();
         history = new ArrayList<>();
         historyIdx = 0;
+        historyAppendIdx = 0;
 
     }
 
@@ -204,6 +205,16 @@ public class ConsoleState {
         for (int i = 0; history.size() > i; i++) {
             utils.FileUtils.appendToFileOrCreate(history.get(i) + "\n", fileName);
         }
+
+    }
+
+    public void appendToHistoryFile(String fileName) {
+
+        for (int i = historyAppendIdx; history.size() > i; i++) {
+            utils.FileUtils.appendToFile(history.get(i) + "\n", fileName);
+        }
+
+        historyAppendIdx = history.size();
 
     }
 
