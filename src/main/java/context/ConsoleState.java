@@ -16,6 +16,7 @@ public class ConsoleState {
     private ArrayList<String> lastAutocompletionOptions;
 
     // History
+    private final String histFile;
     private ArrayList<String> history;
     private int historyIdx;
     private boolean previousPressed;
@@ -24,7 +25,6 @@ public class ConsoleState {
 
     public ConsoleState() {
         this.strPath = System.getenv("PATH");
-
         setCurrentDir(System.getProperty("user.dir"));
 
         Collections.addAll(this.paths, strPath.split(":"));
@@ -34,9 +34,14 @@ public class ConsoleState {
 
         lastAutoCompletionCalled = new utils.StringPair(cwd, "no-last-input");
         lastAutocompletionOptions = new ArrayList<>();
+
+        // History
         history = new ArrayList<>();
         historyIdx = 0;
         historyAppendIdx = 0;
+
+        this.histFile = System.getenv("HISTFILE");
+        if (this.histFile != null) writeHistoryFromFile(histFile);
 
     }
 
