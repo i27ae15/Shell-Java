@@ -1,6 +1,9 @@
 package context;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -41,7 +44,25 @@ public class ConsoleState {
         historyAppendIdx = 0;
 
         this.histFile = System.getenv("HISTFILE");
-        if (this.histFile != null) writeHistoryFromFile(histFile);
+        if (this.histFile != null) initializeHistory(histFile);
+
+    }
+
+    public void initializeHistory(String fileName) {
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+
+                if (line.isEmpty()) continue;
+                addToHistory(line);
+
+            }
+
+        } catch (IOException e ) {
+            utils.Printer.println("FILE READING FAILED: " + e.getMessage());
+        }
 
     }
 

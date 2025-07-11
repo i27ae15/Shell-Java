@@ -248,20 +248,7 @@ public class CommandManager {
             case "-r": { // For reading from history file
                 String fileName = args.get(1);
 
-                try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-
-                        if (line.isEmpty()) continue;
-                        consoleState.addToHistory(line);
-
-                    }
-
-
-                } catch (IOException e ) {
-                    utils.Printer.println("FILE READING FAILED: " + e.getMessage());
-                }
+                consoleState.initializeHistory(fileName);
                 break;
             }
 
