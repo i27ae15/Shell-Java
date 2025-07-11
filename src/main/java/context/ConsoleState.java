@@ -25,6 +25,7 @@ public class ConsoleState {
     private boolean previousPressed;
     private boolean nextPressed;
     private int historyAppendIdx;
+    private int historyWrittenOnStartup;
 
     public ConsoleState() {
         this.strPath = System.getenv("PATH");
@@ -42,6 +43,7 @@ public class ConsoleState {
         history = new ArrayList<>();
         historyIdx = 0;
         historyAppendIdx = 0;
+        historyWrittenOnStartup = 0;
 
         this.histFile = System.getenv("HISTFILE");
         if (this.histFile != null) initializeHistory(histFile);
@@ -210,14 +212,19 @@ public class ConsoleState {
 
     }
 
+    public void writeHistoryOnExit() {
+        if (histFile == null) return;
+
+        writeHistoryToFile(histFile, historyWrittenOnStartup);
+    }
+
     public void writeHistoryToFile(String fileName) {
+        writeHistoryToFile(fileName, 0);
+    }
 
-        if (fileName == "HISTFILE") {
-            if (histFile == null) return;
-            fileName = histFile;
-        }
+    public void writeHistoryToFile(String fileName, int startIdx) {
 
-        for (int i = 0; history.size() > i; i++) {
+        for (int i = startIdx; history.size() > i; i++) {
             utils.FileUtils.appendToFileOrCreate(history.get(i) + "\n", fileName);
         }
 
@@ -242,6 +249,7 @@ public class ConsoleState {
 
                 if (line.isEmpty()) continue;
                 addToHistory(line);
+                historyWrittenOnStartup++;
 
             }
 

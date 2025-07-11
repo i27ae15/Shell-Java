@@ -234,7 +234,7 @@ public class CommandManager {
     }
 
     private void exit(ArrayList<String> args) {
-        consoleState.writeHistoryToFile("HISTFILE");
+        consoleState.writeHistoryOnExit();
 
         scanner.close();
         System.exit(Integer.parseInt(args.get(0)));
