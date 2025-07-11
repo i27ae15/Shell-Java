@@ -48,24 +48,6 @@ public class ConsoleState {
 
     }
 
-    public void initializeHistory(String fileName) {
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-
-                if (line.isEmpty()) continue;
-                addToHistory(line);
-
-            }
-
-        } catch (IOException e ) {
-            utils.Printer.println("FILE READING FAILED: " + e.getMessage());
-        }
-
-    }
-
     private void loadFilesToTrie() {
 
         for (String dir : paths) {
@@ -207,6 +189,8 @@ public class ConsoleState {
         return onlyOption + " ";
     }
 
+    // ------------------------------------ HISTORY ------------------------------------
+
     public void addToHistory(String toHistory) {
         history.add(toHistory);
         historyIdx = history.size();
@@ -226,7 +210,12 @@ public class ConsoleState {
 
     }
 
-    public void writeHistoryFromFile(String fileName) {
+    public void writeHistoryToFile(String fileName) {
+
+        if (fileName == "HISTFILE") {
+            if (histFile == null) return;
+            fileName = histFile;
+        }
 
         for (int i = 0; history.size() > i; i++) {
             utils.FileUtils.appendToFileOrCreate(history.get(i) + "\n", fileName);
@@ -243,6 +232,26 @@ public class ConsoleState {
         historyAppendIdx = history.size();
 
     }
+
+    public void initializeHistory(String fileName) {
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+
+                if (line.isEmpty()) continue;
+                addToHistory(line);
+
+            }
+
+        } catch (IOException e ) {
+            utils.Printer.println("FILE READING FAILED: " + e.getMessage());
+        }
+
+    }
+
+    // ------------------------------------ HISTORY-END --------------------------------------
 
     public String getPreviousCommand() {
 

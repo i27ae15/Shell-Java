@@ -234,6 +234,8 @@ public class CommandManager {
     }
 
     private void exit(ArrayList<String> args) {
+        consoleState.writeHistoryToFile("HISTFILE");
+
         scanner.close();
         System.exit(Integer.parseInt(args.get(0)));
     }
@@ -255,7 +257,7 @@ public class CommandManager {
             case "-w": { // For writing a history file
                 String fileName = args.get(1);
 
-                consoleState.writeHistoryFromFile(fileName);
+                consoleState.writeHistoryToFile(fileName);
                 break;
             }
 
