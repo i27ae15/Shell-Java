@@ -249,31 +249,42 @@ public class CommandManager {
         String argument = "";
         if (args.size() > 0) argument = args.get(0);
 
-        if (argument.equals("-r")) {
+        switch (argument) {
+            case "-r": {
+                String fileName = args.get(1);
 
-            String fileName = args.get(1);
+                try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
 
-            try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
 
-                String line;
-                while ((line = reader.readLine()) != null) {
+                        if (line.isEmpty()) continue;
+                        consoleState.addToHistory(line);
 
-                    if (line.isEmpty()) continue;
-                    consoleState.addToHistory(line);
+                    }
 
+
+                } catch (IOException e ) {
+                    utils.Printer.println("FILE READING FAILED: " + e.getMessage());
                 }
-
-
-            } catch (IOException e ) {
-                utils.Printer.println("FILE READING FAILED: " + e.getMessage());
+                break;
             }
-            return;
+
+            case "-w": {
+                String fileName = args.get(1);
+
+                consoleState.writeHistoryFromFile(fileName);
+                break;
+            }
+
+            default: {
+                int limit = -1;
+                if (!argument.isEmpty()) limit = Integer.parseInt(argument);
+                consoleState.printHistory(limit);
+                break;
+            }
         }
 
-
-        int limit = -1;
-        if (!argument.isEmpty()) limit = Integer.parseInt(argument);
-        consoleState.printHistory(limit);
     }
 
 }

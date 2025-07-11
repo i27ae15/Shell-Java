@@ -199,6 +199,14 @@ public class ConsoleState {
 
     }
 
+    public void writeHistoryFromFile(String fileName) {
+
+        for (int i = 0; history.size() > i; i++) {
+            utils.FileUtils.appendToFileOrCreate(history.get(i) + "\n", fileName);
+        }
+
+    }
+
     public String getPreviousCommand() {
 
         historyIdx--;
